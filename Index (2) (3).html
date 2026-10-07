@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapport Concierge</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0f1923;--bg2:#1a2535;--bg3:#1e2d42;
+      --accent:#00d4ff;--accent2:#0099cc;
+      --green:#2ed573;--orange:#ffa502;--red:#ff4757;
+      --gold:#ffd700;--purple:#a29bfe;
+      --text:#e0e0e0;--muted:#7f8c9a;--nav-h:65px
+    }
+    body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:var(--nav-h)}
+    .header{background:var(--bg2);padding:14px 16px;border-bottom:1px solid rgba(0,212,255,.15);position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between}
+    .hl{display:flex;align-items:center;gap:10px}
+    .hl-icon{font-size:1.6em}
+    .hl-title{font-size:1.05em;font-weight:800;color:var(--accent)}
+    .hl-sub{font-size:.72em;color:var(--muted);margin-top:1px}
+    .hr{display:flex;align-items:center;gap:8px}
+    .settings-btn{background:rgba(255,255,255,.08);border:none;color:var(--text);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:1.1em}
+    .date-badge{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.3);color:var(--accent);padding:5px 12px;border-radius:20px;font-size:.8em;font-weight:700}
+    .page{display:none;padding:16px;animation:fadeIn .25s ease}
+    .page.active{display:block}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--bg2);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:200}
+    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;border:none;background:transparent;color:var(--muted);font-size:.72em;font-weight:600;padding:8px 0}
+    .nav-item .ni{font-size:1.5em}
+    .nav-item.active{color:var(--accent)}
+    .nav-item.active .ni{filter:drop-shadow(0 0 6px rgba(0,212,255,.6))}
+    .card{background:var(--bg2);border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid rgba(255,255,255,.07)}
+    .card-title{font-size:.85em;color:var(--accent);font-weight:700;margin-bottom:12px}
+    .welcome{background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(0,153,204,.06));border:1px solid rgba(0,212,255,.25);border-radius:14px;padding:18px 16px;margin-bottom:16px;text-align:center}
+    .welcome-icon{font-size:2.5em;margin-bottom:8px}
+    .welcome-title{font-size:1.15em;font-weight:800;color:var(--accent);margin-bottom:4px}
+    .welcome-sub{font-size:.82em;color:var(--muted)}
+    .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+    .cbtn{background:var(--bg2);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:20px 12px;cursor:pointer;text-align:center;transition:all .25s;color:var(--text)}
+    .cbtn:hover{border-color:var(--accent);background:rgba(0,212,255,.08);transform:translateY(-2px)}
+    .cbtn.selected{border-color:var(--accent);background:rgba(0,212,255,.12);box-shadow:0 0 20px rgba(0,212,255,.2)}
+    .cbtn-icon{font-size:2em;margin-bottom:8px}
+    .cbtn-name{font-size:1em;font-weight:700}
+    .cbtn-role{font-size:.75em;color:var(--muted);margin-top:3px}
+    .section-title{font-size:1em;font-weight:700;color:var(--text);margin-bottom:10px}
+    .fg{margin-bottom:14px}
+    .fl{font-size:.82em;color:var(--muted);margin-bottom:6px;display:block;font-weight:600}
+    .fi{width:100%;padding:11px 14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:var(--text);font-size:.95em}
+    .fi:focus{outline:none;border-color:var(--accent)}
+    .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btn-p{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:700;font-size:1em;cursor:pointer;transition:all .2s;margin-bottom:10px}
+    .btn-p:hover{opacity:.88;transform:translateY(-1px)}
+    .btn-p:disabled{background:#2a3444;color:var(--muted);cursor:not-allowed;transform:none}
+    .btn-s{width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:var(--text);font-weight:600;font-size:.95em;cursor:pointer;margin-bottom:10px}
+    .btn-s:hover{background:rgba(255,255,255,.12)}
+    .btn-g{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#27ae60,#2ed573);color:#fff;font-weight:700;font-size:1em;cursor:pointer;margin-bottom:10px}
+    .btn-d{width:100%;padding:12px;border-radius:12px;border:1px solid var(--red);background:rgba(255,71,87,.15);color:var(--red);font-weight:700;font-size:.95em;cursor:pointer;margin-bottom:10px}
+    .btn-o{padding:9px 16px;border-radius:10px;border:1px solid var(--orange);background:rgba(255,165,2,.15);color:var(--orange);font-weight:700;font-size:.85em;cursor:pointer}
+    .pzone{border:2px dashed rgba(255,255,255,.15);border-radius:12px;padding:20px;text-align:center;cursor:pointer;position:relative;overflow:hidden}
+    .pzone:hover{border-color:var(--accent)}
+    .pzone.has-photo{border-color:var(--green);border-style:solid;padding:8px}
+    .pzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .pzone-icon{font-size:2em;margin-bottom:6px}
+    .pzone-lbl{font-size:.82em;color:var(--muted)}
+    .pzone-time{font-size:.9em;font-weight:700;color:var(--green);margin-top:6px}
+    .ppreview{width:100%;border-radius:8px;max-height:140px;object-fit:cover;display:none}
+    .ppreview.show{display:block}
+    .ai-box{background:linear-gradient(135deg,rgba(162,155,254,.12),rgba(124,58,237,.08));border:1px solid rgba(162,155,254,.35);border-radius:12px;padding:14px;margin-bottom:14px;display:none}
+    .ai-box.show{display:block}
+    .ai-lbl{font-size:.75em;color:var(--purple);font-weight:700;margin-bottom:8px}
+    .ai-txt{font-size:.95em;font-weight:700;color:var(--text);margin-bottom:10px}
+    .ai-btns{display:flex;gap:8px}
+    .ai-ok{flex:1;padding:9px;border-radius:9px;border:1px solid var(--green);background:rgba(46,213,115,.15);color:var(--green);font-weight:700;font-size:.85em;cursor:pointer}
+    .ai-mod{flex:1;padding:9px;border-radius:9px;border:1px solid var(--orange);background:rgba(255,165,2,.12);color:var(--orange);font-weight:700;font-size:.85em;cursor:pointer}
+    .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .pcnt{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.3);color:var(--accent);padding:4px 12px;border-radius:20px;font-size:.8em;font-weight:700}
+    .pcard{background:rgba(0,0,0,.25);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid rgba(255,255,255,.07);border-left:3px solid var(--accent)}
+    .pcard.en-cours{border-left-color:var(--orange)}
+    .pcard.terminee{border-left-color:var(--green)}
+    .ptop{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+    .pnature{font-weight:700;font-size:.95em;flex:1}
+    .pstatus{font-size:.72em;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;margin-left:8px}
+    .pstatus.en-cours{background:rgba(255,165,2,.15);color:var(--orange);border:1px solid var(--orange)}
+    .pstatus.terminee{background:rgba(46,213,115,.15);color:var(--green);border:1px solid var(--green)}
+    .pmeta{display:flex;gap:12px;flex-wrap:wrap;font-size:.78em;color:var(--muted);margin-bottom:8px}
+    .ptemps{font-size:.88em;font-weight:700;color:var(--gold)}
+    .pactions{display:flex;gap:8px;margin-top:10px}
+    .pphotos{display:flex;gap:8px;margin-top:8px}
+    .pthumb{width:52px;height:52px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,.1);cursor:pointer}
+    .total-card{background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,165,2,.06));border:1px solid rgba(255,215,0,.3);border-radius:14px;padding:16px;margin-bottom:14px}
+    .trow{display:flex;justify-content:space-between;align-items:center}
+    .tlbl{font-size:.85em;color:var(--muted)}
+    .tval{font-size:1.4em;font-weight:800;color:var(--gold)}
+    .tsub{font-size:.78em;color:var(--muted);margin-top:4px}
+    .exp-prev{background:rgba(0,0,0,.25);border-radius:12px;padding:14px;margin-bottom:14px;overflow-x:auto}
+    .etable{width:100%;border-collapse:collapse;font-size:.78em;min-width:500px}
+    .etable th{background:rgba(0,212,255,.12);color:var(--accent);padding:8px 10px;text-align:left;font-weight:700;border-bottom:1px solid rgba(0,212,255,.2);white-space:nowrap}
+    .etable td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.05);color:var(--text)}
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;padding:16px;align-items:flex-end}
+    .modal.active{display:flex}
+    .msheet{background:var(--bg3);border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:20px 18px 30px;animation:slideUp .3s ease}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .mhandle{width:40px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin:0 auto 18px}
+    .mtitle{font-size:1.15em;font-weight:700;margin-bottom:18px;color:var(--accent)}
+    .mclose{width:100%;padding:12px;background:none;border:none;color:var(--muted);cursor:pointer;margin-top:10px;font-size:.9em}
+    .srow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+    .srow:last-child{border-bottom:none}
+    .srow-lbl{font-size:.88em}
+    .srow-sub{font-size:.75em;color:var(--muted);margin-top:2px}
+    #loadingOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:999;flex-direction:column;align-items:center;justify-content:center}
+    #loadingOverlay.active{display:flex}
+    .spinner{width:44px;height:44px;border:4px solid rgba(0,212,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .9s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .load-txt{color:var(--accent);margin-top:14px;font-size:.95em}
+    .toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%) translateY(20px);background:#1e3a2e;border:1px solid var(--green);color:var(--green);padding:10px 22px;border-radius:30px;font-size:.88em;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast.err{background:#3a1e1e;border-color:var(--red);color:var(--red)}
+    .toast.gold{background:#2a1e00;border-color:var(--gold);color:var(--gold)}
+    .toast.info{background:#1e2a3a;border-color:var(--accent);color:var(--accent)}
+    .empty{text-align:center;padding:40px 20px;color:var(--muted)}
+    .empty-icon{font-size:3em;margin-bottom:12px}
+    .empty-title{font-size:.95em;font-weight:700;margin-bottom:6px;color:var(--text)}
+    .empty-sub{font-size:.82em;line-height:1.6}
+    .cbar{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+    .cbar-name{font-weight:700;font-size:.95em}
+    .cbar-sub{font-size:.75em;color:var(--muted);margin-top:2px}
+    .chg-btn{background:none;border:1px solid rgba(255,255,255,.15);color:var(--muted);padding:5px 12px;border-radius:8px;font-size:.78em;cursor:pointer}
+    .chg-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:600;align-items:center;justify-content:center}
+    .lightbox.active{display:flex}
+    .lightbox img{max-width:95vw;max-height:90vh;border-radius:12px;object-fit:contain}
+    .lb-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:1.2em;cursor:pointer}
+    @media(max-width:380px){.cgrid{grid-template-columns:1fr}.frow{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="hl">
+    <div class="hl-icon">🏢</div>
+    <div><div class="hl-title">Rapport Concierge</div><div class="hl-sub">Quartier des Kessales</div></div>
+  </div>
+  <div class="hr">
+    <div class="date-badge" id="dateBadge">—</div>
+    <button class="settings-btn" onclick="openSettings()">⚙️</button>
+  </div>
+</div>
+
+<!-- PAGE ACCUEIL -->
+<div class="page active" id="pageAccueil">
+  <div class="welcome">
+    <div class="welcome-icon">👷</div>
+    <div class="welcome-title">Rapport Journalier</div>
+    <div class="welcome-sub">Sélectionne ton nom pour commencer</div>
+  </div>
+  <div class="section-title">Qui es-tu aujourd'hui ?</div>
+  <div class="cgrid">
+    <button class="cbtn" id="btnNuno" onclick="selectConcierge('Nuno')">
+      <div class="cbtn-icon">👷</div><div class="cbtn-name">Nuno</div><div class="cbtn-role">Concierge</div>
+    </button>
+    <button class="cbtn" id="btnThierry" onclick="selectConcierge('Thierry')">
+      <div class="cbtn-icon">🔧</div><div class="cbtn-name">Thierry</div><div class="cbtn-role">Concierge</div>
+    </button>
+  </div>
+  <button class="btn-p" id="btnStartDay" onclick="startDay()" disabled>▶ Commencer la journée</button>
+</div>
+
+<!-- PAGE RAPPORT -->
+<div class="page" id="pageRapport">
+  <div class="cbar">
+    <div>
+      <div class="cbar-name" id="activeConciergeLabel">—</div>
+      <div class="cbar-sub" id="activeDateLabel">—</div>
+    </div>
+    <button class="chg-btn" onclick="goPage('Accueil')">Changer</button>
+  </div>
+  <div class="ph">
+    <div class="section-title" style="margin:0">Prestations du jour</div>
+    <div class="pcnt" id="prestationsCount">0 prestation</div>
+  </div>
+  <div id="prestationsList">
+    <div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Aucune prestation</div><div class="empty-sub">Clique sur ➕ pour enregistrer ta première prestation.</div></div>
+  </div>
+  <div class="total-card" id="totalCard" style="display:none">
+    <div class="trow">
+      <div><div class="tlbl">Temps total presté</div><div class="tval" id="totalTemps">0h00</div></div>
+      <div style="text-align:right"><div class="tlbl">Prestations</div><div class="tval" id="totalNb">0</div></div>
+    </div>
+    <div class="tsub" id="totalSub">—</div>
+  </div>
+  <button class="btn-p" onclick="openNewPrestation()">➕ Nouvelle prestation</button>
+  <button class="btn-s" onclick="goPage('Export')">📊 Voir le rapport & exporter</button>
+</div>
+
+<!-- PAGE EXPORT -->
+<div class="page" id="pageExport">
+  <div class="card">
+    <div class="card-title">📊 Récapitulatif du jour</div>
+    <div class="exp-prev">
+      <table class="etable">
+        <thead><tr><th>Date</th><th>Intervenant</th><th>Bâtiment</th><th>Début</th><th>Fin</th><th>Temps</th><th>Nature des travaux</th></tr></thead>
+        <tbody id="exportTableBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">Aucune prestation</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <button class="btn-p" onclick="exportExcel()">📥 Exporter en Excel</button>
+  <button class="btn-g" onclick="exportPDF()">📄 Rapport PDF avec photos</button>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-item active" id="navAccueil" onclick="goPage('Accueil')"><span class="ni">🏠</span>Accueil</button>
+  <button class="nav-item" id="navRapport" onclick="goPage('Rapport')"><span class="ni">📋</span>Rapport</button>
+  <button class="nav-item" id="navExport" onclick="goPage('Export')"><span class="ni">📊</span>Export</button>
+</nav>
+
+<!-- MODAL NOUVELLE PRESTATION -->
+<div class="modal" id="modalPrestation">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">➕ Nouvelle prestation</div>
+    <div class="fg">
+      <label class="fl">📸 Photo de début (heure extraite automatiquement)</label>
+      <div class="pzone" id="pzDebut">
+        <input type="file" id="piDebut" accept="image/*" capture="environment" onchange="handlePhoto(event,'debut')">
+        <img class="ppreview" id="ppDebut" src="" alt="">
+        <div id="phDebut"><div class="pzone-icon">📷</div><div class="pzone-lbl">Prendre ou importer une photo</div></div>
+        <div class="pzone-time" id="ptDebut"></div>
+      </div>
+    </div>
+    <div class="ai-box" id="aiBox">
+      <div class="ai-lbl">🤖 Suggestion IA</div>
+      <div class="ai-txt" id="aiTxt">Analyse en cours...</div>
+      <div class="ai-btns">
+        <button class="ai-ok" onclick="confirmAI()">✅ Confirmer</button>
+        <button class="ai-mod" onclick="modifyAI()">✏️ Modifier</button>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">🔧 Nature des travaux</label>
+      <input type="text" class="fi" id="inputNature" placeholder="Ex: Remplacement serrure, tonte pelouse...">
+    </div>
+    <div class="fg">
+      <label class="fl">📍 Bâtiment</label>
+      <select class="fi" id="inputResidence">
+        <option value="">— Choisir un bâtiment —</option>
+        <option>QK - Alexandrite 27</option><option>QK - Alexandrite 29</option>
+        <option>QK - Béryl 21</option><option>QK - Béryl 23</option>
+        <option>QK - Corail B2</option><option>QK - Corail B3</option>
+        <option>QK - Corail B4</option><option>QK - Corail B5</option>
+        <option>QK - Corail B6</option><option>QK - Corail B7</option>
+        <option>QK - Corail B8</option><option>QK - Corail B9</option>
+        <option>QK - Olivine</option><option>QK - Onyx</option>
+        <option>QK - Parking 1 &amp; 2</option>
+        <option>QK - Rubis 111</option><option>QK - Rubis 113</option>
+        <option>QK - Tourmaline</option>
+      </select>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">⏰ Heure début</label><input type="time" class="fi" id="inputHeureDebut"></div>
+      <div class="fg"><label class="fl">⏰ Heure fin (optionnel)</label><input type="time" class="fi" id="inputHeureFin"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">📸 Photo de fin (optionnel)</label>
+      <div class="pzone" id="pzFin">
+        <input type="file" id="piFin" accept="image/*" capture="environment" onchange="handlePhoto(event,'fin')">
+        <img class="ppreview" id="ppFin" src="" alt="">
+        <div id="phFin"><div class="pzone-icon">📷</div><div class="pzone-lbl">Photo de fin de prestation</div></div>
+        <div class="pzone-time" id="ptFin"></div>
+      </div>
+    </div>
+    <button class="btn-p" onclick="savePrestation()">💾 Enregistrer la prestation</button>
+    <button class="mclose" onclick="closeModal('modalPrestation')">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL SETTINGS -->
+<div class="modal" id="modalSettings">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">⚙️ Paramètres</div>
+    <div class="fg">
+      <label class="fl">🔑 Clé API OpenRouter</label>
+      <input type="password" class="fi" id="settingsApiKey" placeholder="sk-or-v1-...">
+      <small style="color:var(--muted);display:block;margin-top:5px;font-size:.75em">Clé sur <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--accent)">openrouter.ai/keys</a></small>
+    </div>
+    <div class="srow">
+      <div><div class="srow-lbl">🤖 Détection IA automatique</div><div class="srow-sub">Analyse la photo pour détecter le type de travail</div></div>
+      <input type="checkbox" id="settingsAI" checked style="width:20px;height:20px;accent-color:var(--accent);cursor:pointer">
+    </div>
+    <div class="srow">
+      <div><div class="srow-lbl">⏱ Extraction EXIF automatique</div><div class="srow-sub">Lit l'heure dans les métadonnées de la photo</div></div>
+      <input type="checkbox" id="settingsEXIF" checked style="width:20px;height:20px;accent-color:var(--accent);cursor:pointer">
+    </div>
+    <button class="btn-p" onclick="saveSettings()" style="margin-top:16px">💾 Enregistrer</button>
+    <button class="btn-d" onclick="resetAllData()">🗑️ Effacer toutes les données du jour</button>
+    <button class="mclose" onclick="closeModal('modalSettings')">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL ÉDITION -->
+<div class="modal" id="modalEdit">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">✏️ Modifier la prestation</div>
+    <input type="hidden" id="editIndex">
+    <div class="fg"><label class="fl">🔧 Nature des travaux</label><input type="text" class="fi" id="editNature"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">⏰ Heure début</label><input type="time" class="fi" id="editHeureDebut"></div>
+      <div class="fg"><label class="fl">⏰ Heure fin</label><input type="time" class="fi" id="editHeureFin"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">📍 Bâtiment</label>
+      <select class="fi" id="editResidence">
+        <option value="">— Choisir un bâtiment —</option>
+        <option>QK - Alexandrite 27</option><option>QK - Alexandrite 29</option>
+        <option>QK - Béryl 21</option><option>QK - Béryl 23</option>
+        <option>QK - Corail B2</option><option>QK - Corail B3</option>
+        <option>QK - Corail B4</option><option>QK - Corail B5</option>
+        <option>QK - Corail B6</option><option>QK - Corail B7</option>
+        <option>QK - Corail B8</option><option>QK - Corail B9</option>
+        <option>QK - Olivine</option><option>QK - Onyx</option>
+        <option>QK - Parking 1 &amp; 2</option>
+        <option>QK - Rubis 111</option><option>QK - Rubis 113</option>
+        <option>QK - Tourmaline</option>
+      </select>
+    </div>
+    <button class="btn-p" onclick="saveEdit()">💾 Enregistrer les modifications</button>
+    <button class="btn-d" onclick="deletePrestation()">🗑️ Supprimer cette prestation</button>
+    <button class="mclose" onclick="closeModal('modalEdit')">Annuler</button>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- LOADING -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="load-txt" id="loadingTxt">Chargement...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script>
+// ===================== ÉTAT =====================
+let APP = {
+  apiKey:'', aiEnabled:true, exifEnabled:true,
+  concierge:'', dateJour:'', prestations:[],
+  form:{ photoDebutBase64:null, photoFinBase64:null, heureDebut:'', heureFin:'', aiSuggestion:'' }
+};
+
+// ===================== UTILITAIRES =====================
+const today = () => new Date().toISOString().split('T')[0];
+const getNow = () => {
+  const n = new Date();
+  return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+};
+
+function calcDuree(d, f) {
+  if (!d || !f) return null;
+  const [dh,dm] = d.split(':').map(Number);
+  const [fh,fm] = f.split(':').map(Number);
+  const tot = (fh*60+fm) - (dh*60+dm);
+  if (tot < 0) return null;
+  const h = Math.floor(tot/60), m = tot%60;
+  return { totalMin:tot, label: tot===0 ? '0min' : (h>0 ? h+'h'+String(m).padStart(2,'0') : m+'min') };
+}
+
+function calcTotalJour() {
+  let tot = 0;
+  APP.prestations.forEach(p => {
+    if (p.heureDebut && p.heureFin) {
+      const d = calcDuree(p.heureDebut, p.heureFin);
+      if (d) tot += d.totalMin;
+    }
+  });
+  const h = Math.floor(tot/60), m = tot%60;
+  return { totalMin:tot, label: h+'h'+String(m).padStart(2,'0') };
+}
+
+// ===================== PERSISTANCE =====================
+function save() {
+  try {
+    const s = { ...APP, prestations: APP.prestations.map(p => ({...p, photoDebutBase64:null, photoFinBase64:null})) };
+    localStorage.setItem('capp', JSON.stringify(s));
+  } catch(e) { console.warn('save error', e); }
+}
+
+function load() {
+  try {
+    const d = localStorage.getItem('capp');
+    if (!d) return;
+    const p = JSON.parse(d);
+    if (p.dateJour && p.dateJour !== today()) { p.prestations = []; p.dateJour = today(); }
+    APP = { ...APP, ...p };
+  } catch(e) { console.warn('load error', e); }
+}
+
+// ===================== UI HELPERS =====================
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type==='err' ? ' err' : type==='gold' ? ' gold' : type==='info' ? ' info' : '');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function showLoad(txt='Chargement...') {
+  document.getElementById('loadingTxt').textContent = txt;
+  document.getElementById('loadingOverlay').classList.add('active');
+}
+function hideLoad() { document.getElementById('loadingOverlay').classList.remove('active'); }
+
+// ===================== NAVIGATION =====================
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page'+name).classList.add('active');
+  document.getElementById('nav'+name).classList.add('active');
+  if (name === 'Rapport') renderPrestations();
+  if (name === 'Export')  renderExportTable();
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// ===================== ACCUEIL =====================
+function selectConcierge(nom) {
+  APP.concierge = nom;
+  document.getElementById('btnNuno').classList.toggle('selected', nom === 'Nuno');
+  document.getElementById('btnThierry').classList.toggle('selected', nom === 'Thierry');
+  document.getElementById('btnStartDay').disabled = false;
+}
+
+function startDay() {
+  if (!APP.concierge) { toast('❌ Sélectionne ton nom', 'err'); return; }
+  APP.dateJour = today();
+  save(); updateUI(); goPage('Rapport');
+  toast('✅ Journée démarrée — ' + APP.concierge);
+}
+
+// ===================== MISE À JOUR UI =====================
+function updateUI() {
+  document.getElementById('dateBadge').textContent =
+    new Date().toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'numeric'});
+  if (APP.concierge) {
+    document.getElementById('activeConciergeLabel').textContent = '👷 ' + APP.concierge;
+    document.getElementById('activeDateLabel').textContent =
+      '📅 ' + new Date().toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+    document.getElementById('btnNuno').classList.toggle('selected', APP.concierge === 'Nuno');
+    document.getElementById('btnThierry').classList.toggle('selected', APP.concierge === 'Thierry');
+    document.getElementById('btnStartDay').disabled = false;
+  }
+  document.getElementById('settingsApiKey').value = APP.apiKey || '';
+  document.getElementById('settingsAI').checked   = APP.aiEnabled !== false;
+  document.getElementById('settingsEXIF').checked = APP.exifEnabled !== false;
+}
+
+// ===================== SETTINGS =====================
+function openSettings() {
+  document.getElementById('settingsApiKey').value = APP.apiKey || '';
+  document.getElementById('settingsAI').checked   = APP.aiEnabled !== false;
+  document.getElementById('settingsEXIF').checked = APP.exifEnabled !== false;
+  openModal('modalSettings');
+}
+
+function saveSettings() {
+  APP.apiKey    = document.getElementById('settingsApiKey').value.trim();
+  APP.aiEnabled = document.getElementById('settingsAI').checked;
+  APP.exifEnabled = document.getElementById('settingsEXIF').checked;
+  save(); closeModal('modalSettings'); toast('⚙️ Paramètres enregistrés');
+}
+
+function resetAllData() {
+  if (!confirm('⚠️ Effacer toutes les prestations du jour ?')) return;
+  APP.prestations = [];
+  save(); closeModal('modalSettings'); renderPrestations();
+  toast('🗑️ Données effacées', 'info');
+}
+
+// ===================== EXIF =====================
+function extractEXIF(file) {
+  return new Promise(res => {
+    if (!APP.exifEnabled) { res(null); return; }
+    const r = new FileReader();
+    r.onload = e => {
+      try {
+        const arr = new Uint8Array(e.target.result);
+        const str = String.fromCharCode(...arr.slice(0, 65536));
+        const m = str.match(/(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+        res(m ? m[4]+':'+m[5] : null);
+      } catch { res(null); }
+    };
+    r.onerror = () => res(null);
+    r.readAsArrayBuffer(file.slice(0, 65536));
+  });
+}
+
+// ===================== PHOTOS =====================
+async function handlePhoto(event, type) {
+  const file = event.target.files[0];
+  if (!file || !file.type.startsWith('image/')) { toast('❌ Fichier image requis', 'err'); return; }
+  showLoad(type === 'debut' ? 'Lecture photo début...' : 'Lecture photo fin...');
+  try {
+    const exif  = await extractEXIF(file);
+    const heure = exif || getNow();
+    const src   = exif ? '📷 EXIF' : '🕐 Heure actuelle';
+    const b64   = await resize(file, 800);
+
+    if (type === 'debut') {
+      APP.form.photoDebutBase64 = b64;
+      APP.form.heureDebut = heure;
+      const p = document.getElementById('ppDebut');
+      p.src = b64; p.classList.add('show');
+      document.getElementById('phDebut').style.display = 'none';
+      document.getElementById('ptDebut').textContent   = src + ' — ' + heure;
+      document.getElementById('pzDebut').classList.add('has-photo');
+      document.getElementById('inputHeureDebut').value = heure;
+      hideLoad();
+      if (APP.aiEnabled && APP.apiKey) analyzeAI(b64);
+    } else {
+      APP.form.photoFinBase64 = b64;
+      APP.form.heureFin = heure;
+      const p = document.getElementById('ppFin');
+      p.src = b64; p.classList.add('show');
+      document.getElementById('phFin').style.display = 'none';
+      document.getElementById('ptFin').textContent   = src + ' — ' + heure;
+      document.getElementById('pzFin').classList.add('has-photo');
+      document.getElementById('inputHeureFin').value = heure;
+      hideLoad();
+      toast('✅ Photo fin enregistrée — ' + heure);
+    }
+  } catch { hideLoad(); toast('❌ Erreur lecture photo', 'err'); }
+}
+
+function resize(file, maxW) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = Math.round(h*maxW/w); w = maxW; }
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        res(c.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = rej; img.src = e.target.result;
+    };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+
+// ===================== IA =====================
+async function analyzeAI(b64) {
+  const box = document.getElementById('aiBox');
+  const txt = document.getElementById('aiTxt');
+  box.classList.add('show');
+  txt.textContent = '🤖 Analyse de la photo en cours...';
+  showLoad('Analyse IA...');
+  try {
+    const base64Data = b64.includes(',') ? b64.split(',')[1] : b64;
+    const mime = b64.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + APP.apiKey,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': location.href,
+        'X-Title': 'Rapport Concierge'
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: [{
+          role: 'user',
+          content: [
+            { type:'text', text:'Analyse cette photo et identifie la nature du travail effectué. Réponds UNIQUEMENT en JSON : {"nature":"max 6 mots","confiance":"haute|moyenne|faible","detail":"une phrase"}' },
+            { type:'image_url', image_url:{ url:'data:'+mime+';base64,'+base64Data, detail:'low' } }
+          ]
+        }],
+        temperature: 0.2, max_tokens: 150
+      })
+    });
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    const data = await resp.json();
+    const raw  = data.choices?.[0]?.message?.content?.trim() || '';
+    const si = raw.indexOf('{'), ei = raw.lastIndexOf('}');
+    if (si === -1) throw new Error('Réponse invalide');
+    const parsed = JSON.parse(raw.substring(si, ei+1));
+    if (!parsed.nature) throw new Error('Nature non détectée');
+    APP.form.aiSuggestion = parsed.nature;
+    const icon = {haute:'🟢', moyenne:'🟡', faible:'🔴'}[parsed.confiance] || '🟡';
+    txt.innerHTML = '<div style="font-weight:800;margin-bottom:4px">'+parsed.nature+'</div>'+
+      '<div style="font-size:.78em;color:var(--muted)">'+icon+' Confiance '+parsed.confiance+' &nbsp;|&nbsp; '+( parsed.detail||'')+'</div>';
+    if (parsed.confiance === 'haute') {
+      document.getElementById('inputNature').value = parsed.nature;
+      toast('🤖 Détecté : ' + parsed.nature, 'gold');
+    } else {
+      toast('🤖 Suggestion IA — vérifie et confirme', 'info');
+    }
+  } catch(e) {
+    txt.innerHTML = '<span style="color:var(--orange)">⚠️ Analyse échouée — saisis manuellement</span>';
+    setTimeout(() => box.classList.remove('show'), 4000);
+    toast('⚠️ IA indisponible', 'err');
+  } finally { hideLoad(); }
+}
+
+function confirmAI() {
+  document.getElementById('inputNature').value = APP.form.aiSuggestion;
+  document.getElementById('aiBox').classList.remove('show');
+  toast('✅ Nature confirmée');
+}
+function modifyAI() {
+  document.getElementById('inputNature').value = APP.form.aiSuggestion;
+  document.getElementById('aiBox').classList.remove('show');
+  document.getElementById('inputNature').focus();
+  toast('✏️ Modifie la nature', 'info');
+}
+
+// ===================== FORMULAIRE PRESTATION =====================
+function openNewPrestation() {
+  if (!APP.concierge) { toast('❌ Sélectionne d\'abord ton nom', 'err'); goPage('Accueil'); return; }
+  APP.form = { photoDebutBase64:null, photoFinBase64:null, heureDebut:'', heureFin:'', aiSuggestion:'' };
+  ['ppDebut','ppFin'].forEach(id => { const e = document.getElementById(id); e.classList.remove('show'); e.src=''; });
+  ['phDebut','phFin'].forEach(id => document.getElementById(id).style.display = 'block');
+  ['ptDebut','ptFin'].forEach(id => document.getElementById(id).textContent = '');
+  ['pzDebut','pzFin'].forEach(id => document.getElementById(id).classList.remove('has-photo'));
+  ['piDebut','piFin'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('inputNature').value     = '';
+  document.getElementById('inputHeureDebut').value = '';
+  document.getElementById('inputHeureFin').value   = '';
+  document.getElementById('inputResidence').value  = '';
+  document.getElementById('aiBox').classList.remove('show');
+  openModal('modalPrestation');
+}
+
+function savePrestation() {
+  const nature    = document.getElementById('inputNature').value.trim();
+  const residence = document.getElementById('inputResidence').value;
+  const hD        = document.getElementById('inputHeureDebut').value;
+  const hF        = document.getElementById('inputHeureFin').value;
+  if (!nature) { toast('❌ Indique la nature des travaux', 'err'); document.getElementById('inputNature').focus(); return; }
+  if (!hD)     { toast('❌ L\'heure de début est requise', 'err'); return; }
+  const duree = hF ? calcDuree(hD, hF) : null;
+  APP.prestations.push({
+    id: Date.now(),
+    date: APP.dateJour || today(),
+    concierge: APP.concierge,
+    residence, nature,
+    heureDebut: hD, heureFin: hF || '',
+    duree:    duree ? duree.label   : '',
+    dureeMin: duree ? duree.totalMin : 0,
+    statut:   hF ? 'terminee' : 'en-cours',
+    photoDebutBase64: APP.form.photoDebutBase64,
+    photoFinBase64:   APP.form.photoFinBase64
+  });
+  save(); closeModal('modalPrestation'); renderPrestations();
+  toast('✅ Prestation enregistrée — ' + nature, 'gold');
+}
+
+// ===================== RENDU LISTE =====================
+function renderPrestations() {
+  const list = document.getElementById('prestationsList');
+  const nb   = APP.prestations.length;
+  document.getElementById('prestationsCount').textContent = nb + (nb <= 1 ? ' prestation' : ' prestations');
+  if (!nb) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Aucune prestation</div><div class="empty-sub">Clique sur ➕ pour enregistrer ta première prestation.</div></div>';
+    document.getElementById('totalCard').style.display = 'none';
+    return;
+  }
+  list.innerHTML = '';
+  APP.prestations.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'pcard ' + (p.statut || 'en-cours');
+    let photos = '';
+    if (p.photoDebutBase64 || p.photoFinBase64) {
+      photos = '<div class="pphotos">';
+      if (p.photoDebutBase64) photos += '<img class="pthumb" src="'+p.photoDebutBase64+'" onclick="openLightbox(this.src)" title="Photo début">';
+      if (p.photoFinBase64)   photos += '<img class="pthumb" src="'+p.photoFinBase64+'"   onclick="openLightbox(this.src)" title="Photo fin">';
+      photos += '</div>';
+    }
+    const dureeHtml = p.statut === 'terminee'
+      ? '<span class="ptemps">⏱ ' + (p.duree || '0min') + '</span>'
+      : '<span style="color:var(--orange);font-size:.8em">⏳ En cours</span>';
+    div.innerHTML =
+      '<div class="ptop">'+
+        '<div class="pnature">🔧 '+p.nature+'</div>'+
+        '<div class="pstatus '+(p.statut||'en-cours')+'">'+(p.statut==='terminee'?'✅ Terminée':'🔄 En cours')+'</div>'+
+      '</div>'+
+      '<div class="pmeta">'+
+        (p.residence ? '<span>📍 '+p.residence+'</span>' : '')+
+        '<span>🕐 '+p.heureDebut+' → '+(p.heureFin||'...')+'</span>'+
+      '</div>'+
+      dureeHtml + photos +
+      '<div class="pactions">'+
+        '<button class="btn-o" onclick="openEdit('+i+')">✏️ Modifier</button>'+
+        (p.statut !== 'terminee' ? '<button class="btn-o" onclick="terminer('+i+')" style="background:rgba(46,213,115,.12);border-color:var(--green);color:var(--green)">✅ Terminer</button>' : '')+
+      '</div>';
+    list.appendChild(div);
+  });
+  const t = calcTotalJour();
+  document.getElementById('totalCard').style.display = 'block';
+  document.getElementById('totalTemps').textContent  = t.label;
+  document.getElementById('totalNb').textContent     = nb;
+  document.getElementById('totalSub').textContent    =
+    APP.concierge + ' — ' + new Date().toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
+}
+
+function terminer(i) {
+  const p = APP.prestations[i];
+  const hF = getNow();
+  p.heureFin = hF; p.statut = 'terminee';
+  const d = calcDuree(p.heureDebut, hF);
+  if (d) { p.duree = d.label; p.dureeMin = d.totalMin; }
+  save(); renderPrestations();
+  toast('✅ Terminée — ' + hF);
+}
+
+// ===================== ÉDITION =====================
+function openEdit(i) {
+  const p = APP.prestations[i];
+  document.getElementById('editIndex').value      = i;
+  document.getElementById('editNature').value     = p.nature;
+  document.getElementById('editHeureDebut').value = p.heureDebut || '';
+  document.getElementById('editHeureFin').value   = p.heureFin   || '';
+  document.getElementById('editResidence').value  = p.residence  || '';
+  openModal('modalEdit');
+}
+
+function saveEdit() {
+  const i = parseInt(document.getElementById('editIndex').value);
+  const p = APP.prestations[i]; if (!p) return;
+  p.nature     = document.getElementById('editNature').value.trim()     || p.nature;
+  p.heureDebut = document.getElementById('editHeureDebut').value        || p.heureDebut;
+  p.heureFin   = document.getElementById('editHeureFin').value          || '';
+  p.residence  = document.getElementById('editResidence').value         || p.residence;
+  if (p.heureFin) {
+    const d = calcDuree(p.heureDebut, p.heureFin);
+    p.duree = d ? d.label : '0min'; p.dureeMin = d ? d.totalMin : 0; p.statut = 'terminee';
+  } else {
+    p.duree = ''; p.dureeMin = 0; p.statut = 'en-cours';
+  }
+  save(); closeModal('modalEdit'); renderPrestations();
+  toast('✅ Prestation modifiée');
+}
+
+function deletePrestation() {
+  const i = parseInt(document.getElementById('editIndex').value);
+  if (!confirm('Supprimer cette prestation ?')) return;
+  APP.prestations.splice(i, 1);
+  save(); closeModal('modalEdit'); renderPrestations();
+  toast('🗑️ Supprimée', 'info');
+}
+
+// ===================== LIGHTBOX =====================
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('active');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.getElementById('lightboxImg').src = '';
+}
+
+// ===================== EXPORT TABLE =====================
+function renderExportTable() {
+  const tb = document.getElementById('exportTableBody');
+  if (!APP.prestations.length) {
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">Aucune prestation enregistrée</td></tr>';
+    return;
+  }
+  tb.innerHTML = '';
+  APP.prestations.forEach(p => {
+    const tr = document.createElement('tr');
+    const dl = new Date(p.date).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'});
+    tr.innerHTML =
+      '<td>'+dl+'</td><td>'+(p.concierge||'—')+'</td><td>'+(p.residence||'—')+'</td>'+
+      '<td>'+(p.heureDebut||'—')+'</td><td>'+(p.heureFin||'—')+'</td>'+
+      '<td style="color:var(--gold);font-weight:700">'+(p.duree||'—')+'</td>'+
+      '<td>'+(p.nature||'—')+'</td>';
+    tb.appendChild(tr);
+  });
+}
+
+// ===================== EXPORT EXCEL =====================
+async function exportExcel() {
+  if (!APP.prestations.length) { toast('❌ Aucune prestation à exporter', 'err'); return; }
+  if (typeof XLSX === 'undefined') { toast('❌ SheetJS non disponible (hors ligne ?)', 'err'); return; }
+  showLoad('Génération Excel...');
+  try {
+    const wb = XLSX.utils.book_new();
+    const dl = new Date(APP.dateJour||today()).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'});
+    const rows = APP.prestations.map(p => [dl, p.concierge||'', p.residence||'', p.heureDebut||'', p.heureFin||'', p.duree||'', p.nature||'']);
+    const t = calcTotalJour();
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Date','Intervenant','Bâtiment','Heure début','Heure fin','Temps presté','Nature des travaux'],
+      ...rows, [],
+      ['','','','','TOTAL', t.label, APP.prestations.length+' prestation(s)']
+    ]);
+    ws['!cols'] = [{wch:12},{wch:14},{wch:24},{wch:12},{wch:10},{wch:14},{wch:40}];
+    const cats = {};
+    APP.prestations.forEach(p => {
+      const k = p.nature||'Autre';
+      if (!cats[k]) cats[k] = {c:0, m:0};
+      cats[k].c++; cats[k].m += p.dureeMin||0;
+    });
+    const wsR = XLSX.utils.aoa_to_sheet([
+      ['Nature des travaux','Nb interventions','Temps total'],
+      ...Object.entries(cats).map(([n,d]) => {
+        const h = Math.floor(d.m/60), m = d.m%60;
+        return [n, d.c, h>0 ? h+'h'+String(m).padStart(2,'0') : m+'min'];
+      })
+    ]);
+    wsR['!cols'] = [{wch:40},{wch:18},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws,  'Rapport journalier');
+    XLSX.utils.book_append_sheet(wb, wsR, 'Récap par travaux');
+    XLSX.writeFile(wb, 'Rapport_'+(APP.concierge||'Concierge')+'_'+(APP.dateJour||today()).replace(/-/g,'')+'.xlsx');
+    hideLoad(); toast('📥 Excel exporté', 'gold');
+  } catch(e) { hideLoad(); toast('❌ Erreur : '+e.message, 'err'); }
+}
+
+// ===================== EXPORT PDF AVEC PHOTOS =====================
+function exportPDF() {
+  if (!APP.prestations.length) { toast('❌ Aucune prestation à exporter', 'err'); return; }
+  const dateLabel = new Date(APP.dateJour||today()).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  const t = calcTotalJour();
+  let rows = '';
+  APP.prestations.forEach((p, i) => {
+    rows += `<tr>
+      <td>${i+1}</td>
+      <td>${p.concierge||'—'}</td>
+      <td>${p.residence||'—'}</td>
+      <td>${p.heureDebut||'—'}</td>
+      <td>${p.heureFin||'—'}</td>
+      <td><strong>${p.duree||'—'}</strong></td>
+      <td>${p.nature||'—'}</td>
+    </tr>`;
+  });
+  let gallery = '', hasPhoto = false;
+  APP.prestations.forEach((p, i) => {
+    if (!p.photoDebutBase64 && !p.photoFinBase64) return;
+    hasPhoto = true;
+    gallery += `<div class="gblock">
+      <div class="gtitle">${i+1}. ${p.nature||'—'} &nbsp;|&nbsp; ${p.residence||''} &nbsp;|&nbsp; ${p.heureDebut||''}${p.heureFin?' → '+p.heureFin:''} ${p.duree?'('+p.duree+')':''}</div>
+      <div class="gphoto">
+        ${p.photoDebutBase64?`<div class="gitem"><img src="${p.photoDebutBase64}"><div class="gcap">📷 Début — ${p.heureDebut||''}</div></div>`:''}
+        ${p.photoFinBase64?`<div class="gitem"><img src="${p.photoFinBase64}"><div class="gcap">📷 Fin — ${p.heureFin||''}</div></div>`:''}
+      </div>
+    </div>`;
+  });
+  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+  <title>Rapport ${APP.concierge||''} — ${dateLabel}</title>
+  <style>
+    @page{margin:18mm 15mm}
+    *{box-sizing:border-box}
+    body{font-family:Arial,sans-serif;font-size:11px;color:#1a2535;margin:0}
+    h1{font-size:17px;color:#0099cc;margin-bottom:3px}
+    .meta{color:#555;font-size:10px;margin-bottom:16px;line-height:1.9}
+    table{width:100%;border-collapse:collapse;margin-bottom:24px}
+    th{background:#0099cc;color:#fff;padding:7px 8px;text-align:left;font-size:10px}
+    td{padding:6px 8px;border-bottom:1px solid #eee;font-size:10px;vertical-align:middle}
+    tr:nth-child(even) td{background:#f7fbff}
+    .tfoot td{background:#fff8e1!important;font-weight:700;border-top:2px solid #ffd700}
+    h2{font-size:13px;color:#1a2535;margin:24px 0 12px;border-bottom:2px solid #0099cc;padding-bottom:5px}
+    .gblock{break-inside:avoid;margin-bottom:18px;border:1px solid #ddd;border-radius:6px;padding:12px}
+    .gtitle{font-weight:700;font-size:10px;margin-bottom:8px;color:#0099cc}
+    .gphoto{display:flex;gap:14px;flex-wrap:wrap}
+    .gitem{text-align:center}
+    .gitem img{max-width:280px;max-height:200px;border-radius:5px;border:1px solid #ccc;display:block}
+    .gcap{font-size:9px;color:#666;margin-top:4px}
+    @media print{body{margin:0}}
+  </style>
+  </head><body>
+  <h1>📋 Rapport Journalier — ${APP.concierge||''}</h1>
+  <div class="meta">
+    📅 ${dateLabel}<br>
+    🏢 Quartier des Kessales<br>
+    ⏱ Temps total presté : <strong>${t.label}</strong><br>
+    🔧 ${APP.prestations.length} prestation(s)
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Intervenant</th><th>Bâtiment</th><th>Début</th><th>Fin</th><th>Temps</th><th>Nature des travaux</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr class="tfoot"><td colspan="5" style="text-align:right">TOTAL JOURNÉE</td><td>${t.label}</td><td>${APP.prestations.length} prestation(s)</td></tr></tfoot>
+  </table>
+  ${hasPhoto ? '<h2>📸 Galerie Photos</h2>'+gallery : ''}
+  </body></html>`;
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'Rapport_'+(APP.concierge||'Concierge')+'_'+(APP.dateJour||today()).replace(/-/g,'')+'.html';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('📄 Rapport PDF généré — ouvre le fichier et imprime', 'gold');
+}
+
+// ===================== CLAVIER & FERMETURE =====================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+    document.querySelectorAll('.lightbox.active').forEach(l => l.classList.remove('active'));
+  }
+});
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+});
+
+// Prévention fermeture accidentelle
+window.addEventListener('beforeunload', e => {
+  if (APP.prestations.length > 0) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// Rafraîchissement total toutes les minutes
+setInterval(() => {
+  if (document.getElementById('pageRapport').classList.contains('active') && APP.prestations.length) {
+    document.getElementById('totalTemps').textContent = calcTotalJour().label;
+  }
+}, 60000);
+
+// ===================== INIT =====================
+function init() {
+  load();
+  APP.dateJour = APP.dateJour || today();
+  updateUI();
+  // Si session déjà active aujourd'hui, aller directement au rapport
+  if (APP.concierge && APP.dateJour === today()) {
+    goPage('Rapport');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
